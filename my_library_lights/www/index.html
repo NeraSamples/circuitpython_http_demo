@@ -1,0 +1,63 @@
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8"/>
+	<link rel="icon" href="/blinka.png"/>
+	<title>Button</title>
+	<link rel="stylesheet" type="text/css" href="reset.css" media="all">
+	<link rel="stylesheet" href="color-picker.min.css" />
+	<script src="color-picker.min.js"></script>
+	<script>
+	// delay sending color by one second
+	var CHOICE_DELAY = 1000;
+	let color_picker;
+	var sender = 0;
+	// startup function
+	function loading() {
+		color_picker = new ColorPickerControl({
+			container: document.querySelector('.content'),
+			use_alpha: false,
+		})
+		// when clicking the color picker
+		color_picker.on('change', function(color){
+			// console.log(color.toRGB())
+			var col = color.toRGB()
+			var r = Math.floor(col[0])
+			var g = Math.floor(col[1])
+			var b = Math.floor(col[2])
+			var url = `/color?r=${r}&g=${g}&b=${b}`
+			// this delays sending the color by the delay (1s by default) 
+			// avoids spamming the server
+			if(sender) {
+				clearTimeout(sender)
+				sender = 0
+			}
+			sender = setTimeout(() => {
+				fetch(url)
+				sender = 0
+			}, CHOICE_DELAY)
+		})
+		// this sets up the current color when the page is loaded
+		fetch("/getcolor")
+		.then((res) => res.json())
+		.then((current_color) => {
+			console.log(current_color)
+			color_picker.color.fromRGBa(...current_color, 255)
+		})
+	}
+	</script>
+	<style>
+	.color-picker {
+		margin: 16px auto auto;
+	}
+	</style>
+</head>
+<body>
+	<div class="content"></div>
+	<script>loading();</script>
+</body>
+</html>

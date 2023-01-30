@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<head>
+	<meta charset="utf-8"/>
+	<link rel="icon" href="/blinka.png"/>
+	<title>Button</title>
+	<script>
+	function click_button(url) {
+		console.log(this)
+		fetch(url)
+	}
+	</script>
+</head>
+<body>
+	<div><button onclick="click_button('/button')">This is a button</button></div>
+</body>
+</html>

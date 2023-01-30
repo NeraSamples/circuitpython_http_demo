@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<head>
+	<meta charset="utf-8"/>
+	<link rel="icon" href="/blinka.png"/>
+	<title>Button</title>
+	<script>
+	function send_text(field, event) {
+		console.log(field.value)
+		console.log(event)
+		if(event.keyCode == 13) {
+			fetch(`/text?the_text=${field.value}`)
+		}
+	}
+	</script>
+</head>
+<body>
+	<div>Press enter to send: <input type="text" onkeyup="send_text(this, event)"/></div>
+</body>
+</html>
