@@ -255,13 +255,6 @@ server = HTTPServer(pool)
 # server routes and app logic
 ############################################################################
 
-@server.route("/")
-def base(request):
-    """Default reponse is /index.html"""
-    print("/ -> index.html")
-    with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
-        response.send_file(f"{ROOT}/index.html")
-
 wheel_colors = [
     tuple(colorwheel(64 * x).to_bytes(3, "big"))
     for x in range(4)

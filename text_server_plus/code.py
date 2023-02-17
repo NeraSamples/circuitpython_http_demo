@@ -104,13 +104,6 @@ server = HTTPServer(pool)
 
 ERROR400 = CommonHTTPStatus.BAD_REQUEST_400
 
-@server.route("/")
-def base(request):
-    """Default reponse is /index.html"""
-    print("/ -> index.html")
-    with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
-        response.send_file(f"{ROOT}/index.html")
-
 @server.route("/text", method="POST")
 def base(request):
     # receive a text in the body
