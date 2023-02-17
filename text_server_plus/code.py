@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Neradoc
+# SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
 # SPDX-License-Identifier: MIT
 """Show text from the web page on a display"""
 import board

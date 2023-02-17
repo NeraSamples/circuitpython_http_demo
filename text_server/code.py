@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Neradoc
+# SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
 # SPDX-License-Identifier: MIT
 """Press a button on the web page to cycle the colors"""
 import board
