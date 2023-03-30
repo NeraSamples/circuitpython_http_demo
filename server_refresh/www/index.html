@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<head>
+	<meta charset="utf-8"/>
+	<!-- disable favicon request -->
+	<link rel="icon" href="data:;base64,=">
+	<title>Button</title>
+	<script>
+	async function update() {
+		const buttons_list = document.getElementById("buttons_list")
+		const response = await fetch("/buttons")
+		if(response.ok) {
+			console.log(response)
+			var content = await response.json()
+			console.log(content)
+			if(content.length > 0) {
+				buttons_list.innerHTML = content.join(", ")
+			} else {
+				buttons_list.innerHTML = "No button"
+			}
+		}
+	}
+	setInterval(update, 5000)
+	</script>
+</head>
+<body>
+	<p>Buttons that were pressed:</p>
+	<p id="buttons_list">No button</p>
+</body>
+</html>

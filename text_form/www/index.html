@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<head>
+	<meta charset="utf-8"/>
+	<link rel="icon" href="data:;base64,=">
+	<title>Button</title>
+	<style>
+	@keyframes pulse {
+		0%   {opacity: 1;}
+		50%  {opacity: 0;}
+		100% {opacity: 1;}
+	}
+	@keyframes spin {
+		0%   {transform: rotate(0);}
+		25%  {transform: rotate(90deg);}
+		50%  {transform: rotate(180deg);}
+		75%  {transform: rotate(270deg);}
+		100% {transform: rotate(360deg);}
+	}
+	.icons {
+		display: none;
+	}
+	#text_sending {
+		animation-name: spin;
+		animation-duration: 1.5s;
+		animation-iteration-count: infinite;
+	}
+	.form {
+		width: 320px;
+		padding: 8px;
+		background: #B0E0FF;
+		border-radius: 16px;
+		margin: auto;
+	}
+	#field_text, input {
+		font-size: inherit;
+		padding: 2px 4px;
+	}
+	</style>
+
+	<script>
+	async function send_text(field, event) {
+		console.log(field.value)
+		console.log(event)
+		if(event.keyCode == 13) {
+			const icons = document.getElementsByClassName("icons")
+			for(icon of icons) { icon.style.display="none" }
+			const sending = document.getElementById("text_sending")
+			const sent = document.getElementById("text_sent")
+			const error = document.getElementById("text_error")
+			var ok = false;
+			sending.style.display = "inline-block"
+			try {
+				const res = await fetch(`/text`, {
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({message: field.value}),
+				})
+				console.log(res)
+				ok = res.ok
+			} catch(err) {
+				console.log(err)
+			}
+			sending.style.display = "none"
+			if(ok) {
+				sent.style.display = "inline"
+			} else {
+				error.style.display = "inline"
+			}
+		}
+		
+	}
+	</script>
+
+
+</head>
+<body>
+<p>multipart/form-data</p>
+<form action="/text" method="POST" enctype="multipart/form-data">
+    <input type="text" name="message" value="Person"/>
+    <input type="text" name="password" value="passw0rd"/>
+    <input type="submit" value="Submit" />
+</form>
+<p>application/x-www-form-urlencoded</p>
+<form action="/text" method="POST" enctype="application/x-www-form-urlencoded">
+    <input type="text" name="message" value="Person"/>
+    <input type="text" name="password" value="passw0rd"/>
+    <input type="submit" value="Submit" />
+</form>
+<p>Text/plain</p>
+<form action="/text" method="POST" enctype="Text/plain">
+    <input type="text" name="message" value="Person"/>
+    <input type="text" name="password" value="passw0rd"/>
+    <input type="submit" value="Submit" />
+</form>
+
+<p>Javascript application/json (press enter to send)</p>
+<div id="form">
+	<input id="field_text" type="text" onkeyup="send_text(this, event)"/>
+	<span class="icons" id="text_sending">💬</span>
+	<span class="icons" id="text_sent">☑️</span>
+	<span class="icons" id="text_error">❌️</span>
+</div>
+
+</body>
+</html>
