@@ -42,48 +42,73 @@ SPDX-License-Identifier: MIT
 	}
 	</style>
 	<script>
-	async function send_text(field, event) {
-		console.log(field.value)
-		console.log(event)
-		if(event.keyCode == 13) {
-			const icons = document.getElementsByClassName("icons")
-			for(icon of icons) { icon.style.display="none" }
-			const sending = document.getElementById("text_sending")
-			const sent = document.getElementById("text_sent")
-			const error = document.getElementById("text_error")
+	async function send_fields(event) {
+		// icons for the user interface
+		const icons = document.getElementsByClassName("icons")
+		const sending = document.getElementById("text_sending")
+		const sent = document.getElementById("text_sent")
+		const error = document.getElementById("text_error")
+		// pressing enter
+		if(event.keyCode == 13 || event.type == "change") {
 			var ok = false;
+			// hide the icons
+			for(icon of icons) { icon.style.display="none" }
+			// show "sending" icon
 			sending.style.display = "inline-block"
+			/**********************************************************/
+			// fields in the form
+			const field_text = document.getElementById("field_text")
+			const field_size = document.getElementById("field_size")
+			// this is the payload sent to the board.
+			const payload = {
+				"text": field_text.value,
+				"size": Number(field_size.value),
+			}
+			/**********************************************************/
+			// now send !
 			try {
-				const res = await fetch(`/text`, {
+				const res = await fetch(`/receive`, {
 					method: "POST",
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({the_text: field.value}),
+					body: JSON.stringify(payload),
 				})
 				console.log(res)
 				ok = res.ok
 			} catch(err) {
 				console.log(err)
 			}
+			// hide "sending" icon
 			sending.style.display = "none"
+			// show status icon based on the result (success or error)
 			if(ok) {
 				sent.style.display = "inline"
 			} else {
 				error.style.display = "inline"
 			}
 		}
-		
+	}
+	function change_num(event) {
+		// check sizes
+		const field_size = document.getElementById("field_size")
+		if(Number(field_size.value) <= 0) { field_size.value = "1" }
+		// call the other one
+		send_fields(event)
 	}
 	</script>
 </head>
 <body>
 	<div id="form">
-		<label>Press enter to send:
-			<input id="field_text" type="text" onkeyup="send_text(this, event)"/>
-			<span class="icons" id="text_sending">💬</span>
+		<label>Press enter to send:<br/>
+			<input id="field_text" type="text" onkeyup="send_fields(event)"/>
+			<span class="icons" id="text_sending">⏱</span>
 			<span class="icons" id="text_sent">☑️</span>
 			<span class="icons" id="text_error">❌️</span>
+		</label>
+		<br/>
+		<label>Font scale:<br/>
+			<input id="field_size" type="number" onchange="change_num(event)" value="1"/>
 		</label>
 	</div>
 </body>
