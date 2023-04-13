@@ -81,14 +81,6 @@ def get_form_data(request):
 
 ERROR400 = CommonHTTPStatus.BAD_REQUEST_400
 
-@server.route("/", method="GET")
-def index_handler(request: HTTPRequest):
-    """
-    Serve the default index.html file.
-    """
-    with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
-        response.send_file(f"{ROOT}/index.html")
-
 @server.route("/", method="POST")
 def index_form_handler(request):
     """Receive data in the body of a POST request."""
@@ -128,7 +120,7 @@ def index_form_handler(request):
 ############################################################################
 
 IP_ADDRESS = wifi.radio.ipv4_address or wifi.radio.ipv4_address_ap
-server.start(host=str(IP_ADDRESS), port=PORT)
+server.start(host=str(IP_ADDRESS), port=PORT, root_path=ROOT)
 
 while True:
     server.poll()
