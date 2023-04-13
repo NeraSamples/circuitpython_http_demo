@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<head>
+	<meta charset="utf-8"/>
+	<link rel="icon" href="data:;base64,=">
+	<title>Button</title>
+	<style>
+	input { font-size: inherit; }
+	</style>
+</head>
+<body>
+	<p>multipart/form-data</p>
+	<form action="" method="POST" enctype="multipart/form-data">
+		<input type="text" name="message" value="Person"/>
+		<input type="text" name="password" value="passw0rd"/>
+		<input type="submit" value="Submit" />
+	</form>
+	<p>application/x-www-form-urlencoded</p>
+	<form action="" method="POST" enctype="application/x-www-form-urlencoded">
+		<input type="text" name="message" value="Person"/>
+		<input type="text" name="password" value="passw0rd"/>
+		<input type="submit" value="Submit" />
+	</form>
+	<p>Text/plain</p>
+	<form action="" method="POST" enctype="Text/plain">
+		<input type="text" name="message" value="Person"/>
+		<input type="text" name="password" value="passw0rd"/>
+		<input type="submit" value="Submit" />
+	</form>
+</body>
+</html>
