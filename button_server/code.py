@@ -13,34 +13,8 @@ from adafruit_httpserver.server import HTTPServer
 from adafruit_httpserver.response import HTTPResponse
 from adafruit_httpserver.mime_type import MIMEType
 
-PORT = 8080
+PORT = 8000
 ROOT = "/www"
-
-############################################################################
-# MDNS
-############################################################################
-
-mdnserv =  mdns.Server(wifi.radio)
-mdnserv.hostname = "button-clicker"
-mdnserv.advertise_service(service_type="_http", protocol="_tcp", port=PORT)
-
-############################################################################
-# some output for demo (neopixel)
-############################################################################
-
-import neopixel
-from rainbowio import colorwheel
-pixels = neopixel.NeoPixel(board.NEOPIXEL, 1)
-
-colors = [colorwheel(64 * x) for x in range(4)]
-color_num = 0
-
-def next_color():
-    global color_num
-    pixels.fill(colors[color_num])
-    color_num = (color_num + 1) % len(colors)
-
-next_color()
 
 ############################################################################
 # wifi
@@ -56,20 +30,61 @@ pool = socketpool.SocketPool(wifi.radio)
 server = HTTPServer(pool)
 
 ############################################################################
+# some output for demo (neopixel)
+############################################################################
+
+from rainbowio import colorwheel
+
+if hasattr(board, "NEOPIXEL"):
+    import neopixel
+    pixels = neopixel.NeoPixel(board.NEOPIXEL, 1)
+elif hasattr(board, "DOTSTAR_CLOCK"):
+    import adafruit_dotstar
+    pixels = adafruit_dotstar.DotStar(board.DOTSTAR_CLOCK, board.DOTSTAR_DATA, 1)
+elif hasattr(board, "LED"):
+    # must work on pico W
+    import digitalio
+    pixels = None
+    led = digitalio.DigitalInOut(board.LED)
+    led.switch_to_output(False)
+
+colors = [colorwheel(24 * x) for x in range(10)]
+color_num = 0
+
+if pixels:
+    def next_color(color=None):
+        """Cycle between colors or set the current color index"""
+        global color_num
+        if color is not None:
+            color_num = color
+        else:
+            color_num = (color_num + 1) % len(colors)
+        pixels.fill(colors[color_num])
+
+    pixels.fill(colors[0])
+else:
+    def next_color(color=None):
+        """For picow, sets the blink speed"""
+        global color_num
+        if color is not None:
+            color_num = color
+        else:
+            color_num = (color_num + 1) % len(colors)
+
+############################################################################
 # server routes and app logic
 ############################################################################
 
-@server.route("/")
-def base(request):
-    """Default reponse is /index.html"""
-    print("/ -> index.html")
-    with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
-        response.send_file(f"{ROOT}/index.html")
-
 @server.route("/button")
 def base(request):
+    # read the button parameter, default to "A" if absent
+    button = request.query_params.get("button", "A")
     # trigger example function
-    next_color()
+    if button == "B":
+        next_color(0)
+    else:
+        next_color()
+    # respond ok to the page
     with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
         response.send("ok")
 
@@ -88,5 +103,9 @@ brights = (
 while True:
     for pb in brights:
         server.poll()
-        pixels.brightness = pb
+        if pixels:
+            pixels.brightness = pb
+        else:
+            bright = ((10 * pb * (color_num + 1)) % 10)
+            led.value = bright > 5
         time.sleep(0.02)

@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT
  -->
 <head>
 	<meta charset="utf-8"/>
-	<link rel="icon" href="/blinka.png"/>
+	<link rel="icon" href="data:;base64,=">
 	<title>Button</title>
 	<script>
 	function click_button(url) {
@@ -16,6 +16,7 @@ SPDX-License-Identifier: MIT
 	</script>
 </head>
 <body>
-	<div><button onclick="click_button('/button')">This is a button</button></div>
+	<div><button onclick="click_button('/button?button=A')">Button A, cycle colors.</button></div>
+	<div><button onclick="click_button('/button?button=B')">Button B, reset colors.</button></div>
 </body>
 </html>
