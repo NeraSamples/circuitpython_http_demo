@@ -20,29 +20,8 @@ from adafruit_httpserver.response import HTTPResponse
 from adafruit_httpserver.mime_type import MIMEType
 from adafruit_httpserver.status import CommonHTTPStatus
 
-MDNS_NAME = "buttons-responder"
 PORT = 8000
 ROOT = "/www"
-
-############################################################################
-# Buttons
-############################################################################
-
-import keypad
-buttons = keypad.Keys(
-    (board.BUTTON_UP, board.BUTTON_SELECT, board.BUTTON_DOWN),
-    value_when_pressed=True,
-)
-btn_names = ["BUP", "BSEL", "BDOWN"]
-pressed_state = [False, False, False]
-
-############################################################################
-# MDNS
-############################################################################
-
-mdnserv =  mdns.Server(wifi.radio)
-mdnserv.hostname = MDNS_NAME
-mdnserv.advertise_service(service_type="_http", protocol="_tcp", port=PORT)
 
 ############################################################################
 # wifi
@@ -56,6 +35,18 @@ print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
 server = HTTPServer(pool)
+
+############################################################################
+# Buttons
+############################################################################
+
+import keypad
+buttons = keypad.Keys(
+    (board.BUTTON_UP, board.BUTTON_SELECT, board.BUTTON_DOWN),
+    value_when_pressed=True,
+)
+btn_names = ["BUP", "BSEL", "BDOWN"]
+pressed_state = [False, False, False]
 
 ############################################################################
 # server routes and app logic
