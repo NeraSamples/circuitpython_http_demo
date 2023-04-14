@@ -11,7 +11,7 @@ import time
 import wifi
 import os
 
-from digitalio import DigitalInOut,Pull
+from digitalio import DigitalInOut, Pull
 from analogio import AnalogIn
 from micropython import const
 from rainbowio import colorwheel
@@ -22,21 +22,23 @@ from adafruit_httpserver.mime_type import MIMEType
 
 PORT = 8080
 ROOT = "/www"
-MDNS_HOST_NAME = "biblio-pololu"
+MDNS_HOST_NAME = "bibliolights"
 
 ################################################################
 # pins
-PIN_STRIP = board.D10  # A2
+PIN_STRIP = board.PIR_SENSE  # A2
+STATUS_PIXEL_NUMBER = 5  # 1
 
 ENABLE_PROXIMITY_SENSOR = False
-PIN_POLLOLU_EN = board.A2  # A6
-PIN_POLLOLU_IN = board.A3  # A5
+if ENABLE_PROXIMITY_SENSOR:
+    PIN_POLLOLU_EN = board.A2  # A6
+    PIN_POLLOLU_IN = board.A3  # A5
 
 ################################################################
 # number of pixels
-NPIXELS = const(12 + 16)
+NPIXELS = 30
 # how long do we stay in "close" proximity mode (seconds)
-DUREE_PROCHE = const(10)
+DUREE_PROCHE = 10
 # brightness in minimum mode (normal mode)
 LUMINOSITE_MIN = 0.40
 # brightness in maximum mode (proximity mode)
@@ -57,7 +59,7 @@ POL_COOLDOWN = 0.2
 DISTANCE_LIMIT = const(5500)
 
 # default color
-current_color = (0,255,255)
+current_color = (0, 255, 255)
 
 ################################################################
 # NVM configuration
@@ -74,17 +76,22 @@ if id_anim != 0xFF:
 else:
     id_anim = 0
 
+
 def save_mem():
     microcontroller.nvm[0:4] = bytes((id_anim,) + current_color)
+
 
 ############################################################################
 # Helpers
 ############################################################################
 
+
 class Box:
     """Box class, to share a value between tasks by reference."""
+
     def __init__(self, value):
         self.value = value
+
 
 ############################################################################
 # neopixel strip
@@ -93,12 +100,22 @@ class Box:
 import neopixel
 from rainbowio import colorwheel
 
-pixels = neopixel.NeoPixel(PIN_STRIP, NPIXELS, auto_write = False)
+pixels = neopixel.NeoPixel(PIN_STRIP, NPIXELS, auto_write=False)
 pixels.brightness = LUMINOSITE_MIN
 
-status = neopixel.NeoPixel(board.NEOPIXEL, 1)
-status.brightness = LUMINOSITE_STATUS_MIN
-status.fill((0,0,0))
+status = None
+if hasattr(board, "NEOPIXEL"):
+    import neopixel
+    status = neopixel.NeoPixel(board.NEOPIXEL, STATUS_PIXEL_NUMBER)
+elif hasattr(board, "DOTSTAR_CLOCK"):
+    import adafruit_dotstar
+    status = adafruit_dotstar.DotStar(
+        board.DOTSTAR_CLOCK, board.DOTSTAR_DATA, STATUS_PIXEL_NUMBER
+    )
+
+if status:
+    status.brightness = LUMINOSITE_STATUS_MIN
+    status.fill((0, 0, 0))
 
 ################################################################
 # setup Pololu
@@ -106,6 +123,7 @@ status.fill((0,0,0))
 
 # mode constants
 MODE_MIN, MODE_MAX = 10, 20
+
 
 class Pol:
     def __init__(self, pol_en, pol_in):
@@ -128,14 +146,16 @@ class Pol:
             print("Proche", now)
             self.last = now
             pixels.brightness = LUMINOSITE_MAX
-            status.brightness = LUMINOSITE_MAX
+            if status:
+                status.brightness = LUMINOSITE_MAX
             self.detected = True
         # wait for DUREE_PROCHE before considering we got away
         elif self.last and (now - self.last) > DUREE_PROCHE:
             print("Fini", now)
             self.last = 0
             pixels.brightness = LUMINOSITE_MIN
-            status.brightness = LUMINOSITE_STATUS_MIN
+            if status:
+                status.brightness = LUMINOSITE_STATUS_MIN
             self.detected = False
 
     async def detection_loop(self, running_mode):
@@ -167,6 +187,7 @@ def setup_proximity_sensor():
     pol_in = AnalogIn(PIN_POLLOLU_IN)
     return Pol(pol_en, pol_in)
 
+
 if ENABLE_PROXIMITY_SENSOR:
     proximity = setup_proximity_sensor()
 
@@ -180,23 +201,20 @@ from adafruit_led_animation import helper
 from animation_cometschase import CometsChase
 
 # one strip configured as 2 lines starting from the center
-# stripette = helper.PixelMap.horizontal_lines(
-# 	pixels, 2, NPIXELS//2, helper.vertical_strip_gridmap(NPIXELS//2, alternating=True)
-# )
-
-stripette = helper.PixelMap(pixels, (
-        [(x, 11 - x) for x in reversed(range(6))]
-        + [(12 + x, 27 - x) for x in range(8)]
-    ),
-    individual_pixels=True
+stripette = helper.PixelMap.horizontal_lines(
+    pixels,
+    2,
+    NPIXELS // 2,
+    helper.vertical_strip_gridmap(NPIXELS // 2, alternating=True),
 )
 
-anim_s = CometsChase(stripette,
-	speed=PIX_DELAY,
-	color=current_color,
-	size=10,
-	spacing=0,
-	reverse=True,
+anim_s = CometsChase(
+    stripette,
+    speed=PIX_DELAY,
+    color=current_color,
+    size=10,
+    spacing=0,
+    reverse=True,
 )
 
 anim = anim_s
@@ -205,14 +223,18 @@ anim = anim_s
 # color
 ################################################################
 
-def set_color(color):
-	global current_color
-	current_color = color
-	anim.color = current_color
-	status.fill(current_color)
-	save_mem()
 
-status.fill(current_color)
+def set_color(color):
+    global current_color
+    current_color = color
+    anim.color = current_color
+    if status:
+        status.fill(current_color)
+    save_mem()
+
+
+if status:
+    status.fill(current_color)
 
 ################################################################
 # watchdog
@@ -226,25 +248,26 @@ status.fill(current_color)
 import supervisor
 import microcontroller
 
+
 def maybe_reset():
-	print("This is were you reset")
-	# if not supervisor.runtime.usb_connected:
-	# 	pixels.fill(current_color)
-	# 	ble.stop_advertising()
-	# 	for connection in ble.connections:
-	# 		connection.disconnect()
-	# 	time.sleep(2)
-	# 	microcontroller.reset()
-	pixels.fill(current_color)
-	time.sleep(2)
+    print("This is were you reset")
+    # if not supervisor.runtime.usb_connected:
+    # 	pixels.fill(current_color)
+    # 	ble.stop_advertising()
+    # 	for connection in ble.connections:
+    # 		connection.disconnect()
+    # 	time.sleep(2)
+    # 	microcontroller.reset()
+    pixels.fill(current_color)
+    time.sleep(2)
+
 
 ############################################################################
 # wifi
 ############################################################################
 
 wifi.radio.connect(
-    os.getenv("CIRCUITPY_WIFI_SSID"),
-    os.getenv("CIRCUITPY_WIFI_PASSWORD")
+    os.getenv("CIRCUITPY_WIFI_SSID"), os.getenv("CIRCUITPY_WIFI_PASSWORD")
 )
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
@@ -255,16 +278,15 @@ server = HTTPServer(pool)
 # server routes and app logic
 ############################################################################
 
-wheel_colors = [
-    tuple(colorwheel(64 * x).to_bytes(3, "big"))
-    for x in range(4)
-]
+wheel_colors = [tuple(colorwheel(64 * x).to_bytes(3, "big")) for x in range(4)]
+
 
 def limit(val):
     try:
         return min(255, max(0, int(val)))
     except ValueError:
         return 0
+
 
 @server.route("/button")
 def base(request):
@@ -274,6 +296,7 @@ def base(request):
     set_color(current_color)
     with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
         response.send("ok")
+
 
 @server.route("/color")
 def base(request):
@@ -288,31 +311,36 @@ def base(request):
     with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
         response.send("ok")
 
+
 @server.route("/getcolor")
 def base(request):
     with HTTPResponse(request, content_type=MIMEType.TYPE_JSON) as response:
         response.send(json.dumps(current_color))
 
+
 # start server
 IP_ADDRESS = wifi.radio.ipv4_address or wifi.radio.ipv4_address_ap
 server.start(host=str(IP_ADDRESS), port=PORT, root_path=ROOT)
+
 
 async def web_server():
     while True:
         server.poll()
         await asyncio.sleep(0.01)
 
+
 ############################################################################
 # MDNS
 ############################################################################
 
-mdnserv =  mdns.Server(wifi.radio)
+mdnserv = mdns.Server(wifi.radio)
 mdnserv.hostname = MDNS_HOST_NAME
 mdnserv.advertise_service(service_type="_http", protocol="_tcp", port=PORT)
 
 ############################################################################
 # Loops
 ############################################################################
+
 
 async def main():
     running_mode = Box(MODE_MIN)
@@ -324,7 +352,7 @@ async def main():
     while True:
         # play animation depending on the mode
         if running_mode.value == MODE_MAX:
-            anim.animate(show = False)
+            anim.animate(show=False)
             # overlay white pixels during MAX mode
             for i in range(0, NPIXELS, 4):
                 pixels[i] = (100, 100, 100)
@@ -333,10 +361,11 @@ async def main():
             # play normal in min mode
             anim.animate()
 
-        # 
-        status.fill(colorwheel(time.monotonic() * 100))
+        if status:
+            status.fill(colorwheel(time.monotonic() * 100))
 
         # print(time.monotonic(),end="\r")
         await asyncio.sleep(0.01)
+
 
 asyncio.run(main())
