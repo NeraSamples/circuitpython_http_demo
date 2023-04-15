@@ -32,6 +32,8 @@ else:
     # setup an external display in the display variable.
     raise OSError("Please setup an external display for this demo")
 
+display.auto_refresh = False
+
 ############################################################################
 # Interface on the display
 ############################################################################
@@ -61,7 +63,7 @@ text_area = Label(
 
 splash.append(text_area)
 display.show(splash)
-display.auto_refresh = False
+display.refresh()
 
 def wrap_the_text(text):
     LINE_WRAP = display.width // (box[0] * text_area.scale)
