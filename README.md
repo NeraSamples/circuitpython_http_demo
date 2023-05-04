@@ -38,8 +38,6 @@ Some optional features can be removed to adapt the code to other uses:
 - The web page shows a loading icon when the text is being sent.
 - The python code shows the text on a builtin display, or external display if setup.
 
-Adding mor text fields 
-
 ## Server Refresh Buttons State
 
 [Show the state of buttons, as toggles](server_refresh).
