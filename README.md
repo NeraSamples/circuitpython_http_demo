@@ -67,9 +67,9 @@ To remember the color between resets of the board, see the library lights exampl
 
 ## My Library Lights
 
-[A server controlling a strip of Neopixel LEDs](my_library_lights).
+[A server controlling a strip of Neopixel LEDs](https://github.com/NeraSamples/circuitpython_http_neopixel_animation).
 
-This code also uses an analog proximity sensor to increase the light for a short period of time when someone comes in front. That way you can have a nice LED animation around your library, and it will help you see what you are doing when you get close to retrieve something from it.
+This code is in another repository.
 
 ## Notes
 
