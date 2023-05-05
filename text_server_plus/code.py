@@ -3,8 +3,6 @@
 """Show text from the web page on a display"""
 import board
 import json
-import mdns
-import microcontroller
 import socketpool
 import time
 import traceback
@@ -73,10 +71,11 @@ def wrap_the_text(text):
 # wifi
 ############################################################################
 
-wifi.radio.connect(
-    os.getenv("CIRCUITPY_WIFI_SSID"),
-    os.getenv("CIRCUITPY_WIFI_PASSWORD")
-)
+if not wifi.radio.connected:
+    wifi.radio.connect(
+        os.getenv("WIFI_SSID"),
+        os.getenv("WIFI_PASSWORD")
+    )
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
@@ -93,6 +92,7 @@ def base(request):
     try:
         # receive a text in the body
         body = json.loads(request.body)
+
         ########################################################
         # extract the size field
         size = body.get("size", None)
@@ -103,6 +103,7 @@ def base(request):
                 print(f"Size: {size}")
             except ValueError:
                 print("Size invalid")
+
         ########################################################
         # extract the text field
         the_text = body.get("text", "")
@@ -111,12 +112,15 @@ def base(request):
         # show the message
         text_area.text = message
         print(f"Received:", message)
+
         ########################################################
         # refresh the display after all the changes
         display.refresh()
+
         # respond ok
         with HTTPResponse(request) as response:
             response.send("ok")
+
     except (ValueError, AttributeError) as err:
         # show the error if something went wrong
         traceback.print_exception(err)
@@ -132,4 +136,5 @@ server.start(host=str(IP_ADDRESS), port=PORT)
 
 while True:
     server.poll()
+    # do something else
     time.sleep(0.01)

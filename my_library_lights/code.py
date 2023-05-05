@@ -266,9 +266,11 @@ def maybe_reset():
 # wifi
 ############################################################################
 
-wifi.radio.connect(
-    os.getenv("CIRCUITPY_WIFI_SSID"), os.getenv("CIRCUITPY_WIFI_PASSWORD")
-)
+if not wifi.radio.connected:
+    wifi.radio.connect(
+        os.getenv("WIFI_SSID"),
+        os.getenv("WIFI_PASSWORD")
+    )
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
