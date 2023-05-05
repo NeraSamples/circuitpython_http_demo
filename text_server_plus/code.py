@@ -80,7 +80,7 @@ wifi.radio.connect(
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = HTTPServer(pool)
+server = HTTPServer(pool, root_path=ROOT)
 
 ############################################################################
 # server routes and app logic
@@ -127,7 +127,7 @@ def base(request):
 ############################################################################
 
 IP_ADDRESS = wifi.radio.ipv4_address or wifi.radio.ipv4_address_ap
-server.start(host=str(IP_ADDRESS), port=PORT, root_path=ROOT)
+server.start(host=str(IP_ADDRESS), port=PORT)
 
 while True:
     server.poll()
