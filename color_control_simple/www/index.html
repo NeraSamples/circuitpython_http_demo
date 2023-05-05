@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<head>
+	<meta charset="utf-8"/>
+	<link rel="icon" href="data:;base64,=">
+	<title>Color Selector</title>
+	<link rel="stylesheet" type="text/css" href="coloris.min.css">
+	<script type="text/javascript" src="coloris.min.js"></script>
+	<style>
+	#form {
+		width: 220px;
+		margin: auto;
+	}
+	#color_parent {
+		position: relative;
+	}
+	</style>
+	<script>
+	var current_color = ""
+	////////////////////////////////////////////////////////////////
+	// Do the actual send
+	////////////////////////////////////////////////////////////////
+	async function send_fields() {
+		/**********************************************************/
+		// this is the payload sent to the board.
+		const payload = {
+			"color": current_color,
+		}
+		console.log("Payload", payload)
+		/**********************************************************/
+		// now send !
+		try {
+			const res = await fetch(`/receive`, {
+				method: "POST",
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(payload),
+			})
+		} catch(err) {
+			console.log(err)
+		}
+	}
+	////////////////////////////////////////////////////////////////
+	// Send color under conditions
+	////////////////////////////////////////////////////////////////
+	const CHOICE_DELAY = 1000
+	var sender = 0
+	function update_values(color) {
+		if(color != null) {
+			current_color = color.replace("#","")
+		}
+		// this delays sending the color by the delay (1s by default) 
+		// avoids spamming the server
+		if(sender) {
+			clearTimeout(sender)
+			sender = 0
+		}
+		sender = setTimeout(() => {
+			console.log("sender")
+			send_fields()
+			sender = 0
+		}, CHOICE_DELAY)
+	}
+	////////////////////////////////////////////////////////////////
+	// Coloris
+	////////////////////////////////////////////////////////////////
+	function init_coloris() {
+		function changed_color(event) {
+			console.log(event)
+			update_values(event.detail.color)
+		}
+		console.log(current_color)
+		// Coloris
+		Coloris({
+			inline: true,
+			parent: "#color_parent",
+			theme: 'polaroid',
+			themeMode: 'dark',
+			format: 'hex',
+			formatToggle: false,
+			alpha: false,
+			inline: true,
+			swatches: ['#01004f', '#063248', '#107d06', '#ecc30b', '#3b1102', '#330d0e']
+		})
+		// Setup the callback
+		document.addEventListener("coloris:pick", changed_color)
+	}
+	</script>
+</head>
+<body>
+	<div id="form">
+		<p>Select Color:</p>
+		<p id="color_parent"></p>
+	</div>
+	<script>
+		init_coloris()
+	</script>
+</body>
+</html>

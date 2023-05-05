@@ -48,6 +48,23 @@ Press once to add a button to the list, press again to remove. The html retrieve
 
 This example is written for the Adafruit Fun House, but you can change the button pins to what you need.
 
+## Color Pickers For LEDs
+
+[Click on a color picker to send color to an LED script](color_control_simple).
+
+This demo controls the color of a LED strip (or single on-board LED by default) from a web page with a simple javascript color selector. Clicking on the selector sends the new color to the board. It sends the value as an entry in a json dictionary to make it easier to extend to more controls.
+
+[A bigger version with another color picker and a brightness slider](color_control_slider).
+
+This version has a choice of 2 color pickers, defaulting to the rainbow wheel. Changing color picker is as simple as switching which init function to call, `init_coloris()` or `init_colorpicker()`.
+
+However, color pickers are not always the best suited to pick LED colors, because low brightness LED colors appear as really dark colors on the computer's screen. So this demo has a separate brightness slider which sets the neopixels brigthness.
+
+This allows selecting the color with the full brightness color wheel, while still managing the LEDs brightness with the slider. In addition, loading the page sets the color in the page to the actual current color.
+
+To remember the color between resets of the board, see the library lights example.
+
+
 ## My Library Lights
 
 [A server controlling a strip of Neopixel LEDs](my_library_lights).

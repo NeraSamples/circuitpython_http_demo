@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<!-- 
+SPDX-FileCopyrightText: Copyright 2023 Neradoc, https://neradoc.me
+SPDX-License-Identifier: MIT
+ -->
+<head>
+	<meta charset="utf-8"/>
+	<link rel="icon" href="data:;base64,=">
+	<title>Color Selector</title>
+
+	<link rel="stylesheet" type="text/css" href="reset.css" media="all">
+	<link rel="stylesheet" href="color-picker.min.css" />
+	<script src="color-picker.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="coloris.min.css">
+	<script type="text/javascript" src="coloris.min.js"></script>
+	<style>
+	#form {
+		width: 220px;
+		padding: 8px;
+		background: transparent;
+		border-radius: 16px;
+		margin: auto;
+	}
+	#color_parent {
+		position: relative;
+	}
+	p {
+		margin-top: 8px;
+	}
+	</style>
+	<script>
+	var current_color = ""
+	var current_brightness = 100
+	async function send_fields() {
+		/**********************************************************/
+		// this is the payload sent to the board.
+		const payload = {
+			"color": current_color,
+			"brightness": current_brightness,
+		}
+		console.log("Payload", payload)
+		/**********************************************************/
+		// now send !
+		try {
+			const res = await fetch(`/receive`, {
+				method: "POST",
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(payload),
+			})
+		} catch(err) {
+			console.log(err)
+		}
+	}
+	////////////////////////////////////////////////////////////////
+	// Send color 
+	////////////////////////////////////////////////////////////////
+	const CHOICE_DELAY = 1000
+	var sender = 0
+	function update_values(color) {
+		if(color != null) {
+			current_color = color.replace("#","")
+		}
+		// this delays sending the color by the delay (1s by default) 
+		// avoids spamming the server
+		if(sender) {
+			clearTimeout(sender)
+			sender = 0
+		}
+		sender = setTimeout(() => {
+			console.log("sender")
+			send_fields()
+			sender = 0
+		}, CHOICE_DELAY)
+	}
+	////////////////////////////////////////////////////////////////
+	// Update Brightness
+	////////////////////////////////////////////////////////////////
+	let brightness_slider
+	function init_brightness() {
+		brightness_slider = document.querySelector('#brightness')
+		brightness_slider.onchange = (event) => {
+			current_brightness = event.target.valueAsNumber
+			update_values()
+		}
+		brightness_slider.value = current_brightness
+		
+	}
+	////////////////////////////////////////////////////////////////
+	// Coloris
+	////////////////////////////////////////////////////////////////
+	function init_coloris() {
+		function changed_color(event) {
+			console.log(event)
+			update_values(event.detail.color)
+		}
+		console.log(current_color)
+		// Coloris
+		Coloris({
+			// el: '#text_color',
+			inline: true,
+			parent: "#color_parent",
+			theme: 'polaroid',
+			themeMode: 'dark',
+			format: 'hex',
+			formatToggle: false,
+			// clearButton: true,
+			// closeButton: true,
+			alpha: false,
+			inline: true,
+			defaultColor: `${current_color}`,
+			swatches: ['#067bc2', '#84bcda', '#80e377', '#ecc30b', '#f37748', '#d56062']
+		})
+		// Setup the callback
+		document.addEventListener("coloris:pick", changed_color)
+	}
+	////////////////////////////////////////////////////////////////
+	// Color-Picker
+	////////////////////////////////////////////////////////////////
+	let color_picker
+	function init_colorpicker() {
+		color_picker = new ColorPickerControl({
+			container: document.querySelector('#color_picker'),
+			use_alpha: false,
+		})
+		// when clicking the color picker
+		color_picker.on('change', function(color){
+			// console.log(color.toRGB())
+			current_color = color.toHEX()
+			update_values(current_color)
+		})
+		// this sets up the current color when the page is loaded
+		if(current_color) {
+			console.log(current_color)
+			color_picker.color.fromHEX(current_color)
+		}
+	}
+	////////////////////////////////////////////////////////////////
+	// Get current color
+	////////////////////////////////////////////////////////////////
+	async function init_color() {
+		try {
+			res = await fetch("/getcolor")
+			values = await res.json()
+			color = values.color
+			brightness = values.brightness
+			console.log("Current Color", color, "Brightness", brightness)
+			current_color = color
+			current_brightness = brightness
+		} catch(e) {
+			console.log("Default color error")
+			console.log(e)
+			current_color = "00FF00"
+		}
+	}
+	</script>
+</head>
+<body>
+	<div id="form">
+		<p>Select Color:</p>
+		<p id="color_parent"></p>
+		<p id="color_picker"></p>
+		<p>Brightness</p>
+		<p><input type="range" id="brightness" name="brightness" min="0" max="100" value="100" step="1"></p>
+	</div>
+	<script>
+		// retrieve the current color and setup the color pickers
+		init_color().then(() => {
+			init_brightness()
+			// init_coloris()
+			init_colorpicker()
+		})
+	</script>
+</body>
+</html>
