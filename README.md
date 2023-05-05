@@ -4,6 +4,8 @@ A collection of python and html/javascript code to control a board from a self-h
 
 The adafruit_httpserver library and other dependencies have to be [installed from the Bundle](https://circuitpython.org/libraries).
 
+MIT licensed libraries used: [Coloris color selector](https://coloris.js.org/), [Javascript Color Picker](https://github.com/ivanvmat/color-picker).
+
 ## Button Server
 
 [Press a button on a page](button_server).
