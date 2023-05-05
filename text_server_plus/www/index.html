@@ -43,58 +43,85 @@ SPDX-License-Identifier: MIT
 	</style>
 	<script>
 	async function send_fields(event) {
-		// icons for the user interface
 		const icons = document.getElementsByClassName("icons")
 		const sending = document.getElementById("text_sending")
 		const sent = document.getElementById("text_sent")
 		const error = document.getElementById("text_error")
+		// know if it will go well
+		var ok = false;
+		// show "sending" icon
+		for(icon of icons) { icon.style.display="none" }
+		sending.style.display = "inline-block"
+		/**********************************************************/
+		// this is the payload sent to the board.
+		const field_text = document.getElementById("field_text")
+		const field_size = document.getElementById("field_size")
+		const payload = {
+			"text": field_text.value,
+			"size": Number(field_size.value),
+		}
+		/**********************************************************/
+		// now send !
+		try {
+			const res = await fetch(`/receive`, {
+				method: "POST",
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(payload),
+			})
+			console.log(res)
+			ok = res.ok
+		} catch(err) {
+			console.log(err)
+		}
+		// hide "sending" icon
+		sending.style.display = "none"
+		// show status icon based on the result (success or error)
+		if(ok) {
+			sent.style.display = "inline"
+		} else {
+			error.style.display = "inline"
+		}
+	}
+	////////////////////////////////////////////////////////////////
+	// Start the update process with a delay
+	////////////////////////////////////////////////////////////////
+	const CHOICE_DELAY = 500
+	var sender = 0
+	function update_values(event) {
+		// show "sending" icon
+		const icons = document.getElementsByClassName("icons")
+		const sending = document.getElementById("text_sending")
+		for(icon of icons) { icon.style.display="none" }
+		sending.style.display = "inline-block"
+		// this delays sending the values by the delay (1s by default) 
+		// avoids spamming the server and sending old values
+		if(sender) {
+			clearTimeout(sender)
+			sender = 0
+		}
+		sender = setTimeout(() => {
+			console.log("sender")
+			send_fields(event).then(() => {
+				sender = 0
+			})
+		}, CHOICE_DELAY)
+	}
+	////////////////////////////////////////////////////////////////
+	// Update a field and retrieve the data into a variable
+	////////////////////////////////////////////////////////////////
+	function change_text(event) {
 		// pressing enter
-		if(event.keyCode == 13 || event.type == "change") {
-			var ok = false;
-			// hide the icons
-			for(icon of icons) { icon.style.display="none" }
-			// show "sending" icon
-			sending.style.display = "inline-block"
-			/**********************************************************/
-			// fields in the form
-			const field_text = document.getElementById("field_text")
-			const field_size = document.getElementById("field_size")
-			// this is the payload sent to the board.
-			const payload = {
-				"text": field_text.value,
-				"size": Number(field_size.value),
-			}
-			/**********************************************************/
-			// now send !
-			try {
-				const res = await fetch(`/receive`, {
-					method: "POST",
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(payload),
-				})
-				console.log(res)
-				ok = res.ok
-			} catch(err) {
-				console.log(err)
-			}
-			// hide "sending" icon
-			sending.style.display = "none"
-			// show status icon based on the result (success or error)
-			if(ok) {
-				sent.style.display = "inline"
-			} else {
-				error.style.display = "inline"
-			}
+		if(event.keyCode == 13) {
+			update_values()
 		}
 	}
 	function change_num(event) {
 		// check sizes
 		const field_size = document.getElementById("field_size")
 		if(Number(field_size.value) <= 0) { field_size.value = "1" }
-		// call the other one
-		send_fields(event)
+		update_values()
 	}
 	</script>
 </head>

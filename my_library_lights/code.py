@@ -20,7 +20,7 @@ from adafruit_httpserver.server import HTTPServer
 from adafruit_httpserver.response import HTTPResponse
 from adafruit_httpserver.mime_type import MIMEType
 
-PORT = 8080
+PORT = 8000
 ROOT = "/www"
 MDNS_HOST_NAME = "bibliolights"
 

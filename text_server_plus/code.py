@@ -100,6 +100,7 @@ def base(request):
         if size:
             try:
                 text_area.scale = size
+                print(f"Size: {size}")
             except ValueError:
                 print("Size invalid")
         ########################################################
