@@ -143,10 +143,10 @@ SPDX-License-Identifier: MIT
 	////////////////////////////////////////////////////////////////
 	async function init_color() {
 		try {
-			res = await fetch("/getcolor")
-			values = await res.json()
-			color = values.color
-			brightness = values.brightness
+			const res = await fetch("/getcolor")
+			const values = await res.json()
+			const color = values.color
+			const brightness = values.brightness
 			console.log("Current Color", color, "Brightness", brightness)
 			current_color = color
 			current_brightness = brightness
