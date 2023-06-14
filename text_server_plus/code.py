@@ -9,10 +9,7 @@ import traceback
 import wifi
 import os
 
-from adafruit_httpserver.server import HTTPServer
-from adafruit_httpserver.response import HTTPResponse
-from adafruit_httpserver.mime_type import MIMEType
-from adafruit_httpserver.status import CommonHTTPStatus
+from adafruit_httpserver import Server, Response, MIMETypes
 
 PORT = 8000
 ROOT = "/www"
@@ -79,53 +76,43 @@ if not wifi.radio.connected:
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = HTTPServer(pool, root_path=ROOT)
+server = Server(pool, root_path=ROOT, debug=True)
 
 ############################################################################
 # server routes and app logic
 ############################################################################
 
-ERROR400 = CommonHTTPStatus.BAD_REQUEST_400
-
-@server.route("/receive", method="POST")
+@server.route("/receive", methods="POST")
 def base(request):
-    try:
-        # receive a text in the body
-        body = json.loads(request.body)
+    # receive a text in the body
+    body = json.loads(request.body)
 
-        ########################################################
-        # extract the size field
-        size = body.get("size", None)
-        # change the scale
-        if size:
-            try:
-                text_area.scale = size
-                print(f"Size: {size}")
-            except ValueError:
-                print("Size invalid")
+    ########################################################
+    # extract the size field
+    size = body.get("size", None)
+    # change the scale
+    if size:
+        try:
+            text_area.scale = size
+            print(f"Size: {size}")
+        except ValueError:
+            print("Size invalid")
 
-        ########################################################
-        # extract the text field
-        the_text = body.get("text", "")
-        # prepare the message for the screen
-        message = "\n".join(wrap_the_text(the_text))
-        # show the message
-        text_area.text = message
-        print(f"Received:", message)
+    ########################################################
+    # extract the text field
+    the_text = body.get("text", "")
+    # prepare the message for the screen
+    message = "\n".join(wrap_the_text(the_text))
+    # show the message
+    text_area.text = message
+    print(f"Received:", message)
 
-        ########################################################
-        # refresh the display after all the changes
-        display.refresh()
+    ########################################################
+    # refresh the display after all the changes
+    display.refresh()
 
-        # respond ok
-        with HTTPResponse(request) as response:
-            response.send("ok")
-
-    except (ValueError, AttributeError) as err:
-        # show the error if something went wrong
-        traceback.print_exception(err)
-        with HTTPResponse(request, status=ERROR400) as response:
-            response.send("error")
+    # respond ok
+    return Response(request, "ok")
 
 ############################################################################
 # start and loop

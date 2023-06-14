@@ -8,10 +8,10 @@ import time
 import wifi
 import os
 
-from adafruit_httpserver.server import HTTPServer
-from adafruit_httpserver.response import HTTPResponse
-from adafruit_httpserver.mime_type import MIMEType
-from adafruit_httpserver.status import CommonHTTPStatus
+from adafruit_httpserver.server import Server
+from adafruit_httpserver.response import Response
+from adafruit_httpserver.mime_types import MIMETypes
+from adafruit_httpserver.status import BAD_REQUEST_400
 
 PORT = 8000
 ROOT = "/www"
@@ -33,7 +33,7 @@ if not wifi.radio.connected:
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = HTTPServer(pool, root_path=ROOT)
+server = Server(pool, root_path=ROOT, debug=True)
 
 ############################################################################
 # some output for demo (neopixel)
@@ -57,55 +57,45 @@ pixels.fill(current_color)
 # server routes and app logic
 ############################################################################
 
-ERROR400 = CommonHTTPStatus.BAD_REQUEST_400
-
 # set the current color from the web page
-@server.route("/receive", method="POST")
+@server.route("/receive", methods="POST")
 def base(request):
     global current_color
-    try:
-        # receive values in the body
-        body = json.loads(request.body)
-        ########################################################
-        # extract the color field
-        color = body.get("color", None)
-        if color:
-            print(f"{color=}")
-            try:
-                pixels.fill(int(color, 16))
-                current_color = int(color, 16)
-            except ValueError:
-                print("Color invalid")
-        ########################################################
-        # extract the brightness field
-        brightness = body.get("brightness", None)
-        if brightness is not None:
-            print(f"{brightness=}%")
-            try:
-                pixels.brightness = brightness / 100
-                current_brightness = brightness / 100
-            except ValueError:
-                print("Color invalid")
-        ########################################################
-        # respond ok
-        with HTTPResponse(request) as response:
-            response.send("ok")
-    except (ValueError, AttributeError) as err:
-        # show the error if something went wrong
-        traceback.print_exception(err)
-        with HTTPResponse(request, status=ERROR400) as response:
-            response.send("error")
+    # receive values in the body
+    body = json.loads(request.body)
+    ########################################################
+    # extract the color field
+    color = body.get("color", None)
+    if color:
+        print(f"{color=}")
+        try:
+            pixels.fill(int(color, 16))
+            current_color = int(color, 16)
+        except ValueError:
+            print("Color invalid")
+    ########################################################
+    # extract the brightness field
+    brightness = body.get("brightness", None)
+    if brightness is not None:
+        print(f"{brightness=}%")
+        try:
+            pixels.brightness = brightness / 100
+            current_brightness = brightness / 100
+        except ValueError:
+            print("Color invalid")
+    ########################################################
+    # respond ok
+    return Response(request, "ok")
 
 # read the current color from the web page
 @server.route("/getcolor")
 def base(request):
-    with HTTPResponse(request, content_type=MIMEType.TYPE_JSON) as response:
-        brightness = min(100, max(0, round(100 * current_brightness)))
-        out_data = json.dumps({
-            "brightness": brightness,
-            "color": f"#{current_color:06X}",
-        })
-        response.send(out_data)
+    brightness = min(100, max(0, round(100 * current_brightness)))
+    out_data = json.dumps({
+        "brightness": brightness,
+        "color": f"#{current_color:06X}",
+    })
+    return Response(request, out_data, content_type=MIMETypes.REGISTERED[".json"])
 
 ############################################################################
 # start and loop

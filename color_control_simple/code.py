@@ -7,9 +7,7 @@ import socketpool
 import wifi
 import os
 
-from adafruit_httpserver.server import Server
-from adafruit_httpserver.response import Response
-from adafruit_httpserver.status import BAD_REQUEST_400
+from adafruit_httpserver import Server, Response
 
 PORT = 8000
 ROOT = "/www"
@@ -27,7 +25,7 @@ if not wifi.radio.connected:
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = Server(pool, root_path=ROOT)
+server = Server(pool, root_path=ROOT, debug=True)
 
 ############################################################################
 # some output for demo (neopixel)
@@ -54,27 +52,20 @@ pixels.fill(0)
 # set the current color from the web page
 @server.route("/receive", methods="POST")
 def base(request):
-    try:
-        # receive values in the body
-        body = json.loads(request.body)
-        ########################################################
-        # extract the color field
-        color = body.get("color", None)
-        if color:
-            print(f"{color=}")
-            try:
-                pixels.fill(int(color, 16))
-            except ValueError:
-                print("Color invalid")
-        ########################################################
-        # respond ok
-        with Response(request) as response:
-            response.send("ok")
-    except (ValueError, AttributeError) as err:
-        # show the error if something went wrong
-        traceback.print_exception(err)
-        with Response(request, status=BAD_REQUEST_400) as response:
-            response.send("error")
+    # receive values in the body
+    body = json.loads(request.body)
+    ########################################################
+    # extract the color field
+    color = body.get("color", None)
+    if color:
+        print(f"{color=}")
+        try:
+            pixels.fill(int(color, 16))
+        except ValueError:
+            print("Color invalid")
+    ########################################################
+    # respond ok
+    return Response(request, "ok")
 
 ############################################################################
 # start and loop
