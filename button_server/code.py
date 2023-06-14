@@ -9,9 +9,7 @@ import time
 import wifi
 import os
 
-from adafruit_httpserver.server import HTTPServer
-from adafruit_httpserver.response import HTTPResponse
-from adafruit_httpserver.mime_type import MIMEType
+from adafruit_httpserver import Server, Response
 
 PORT = 8000
 ROOT = "/www"
@@ -28,7 +26,7 @@ if not wifi.radio.connected:
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = HTTPServer(pool, root_path=ROOT)
+server = Server(pool, root_path=ROOT, debug=True)
 
 ############################################################################
 # some output for demo (neopixel)
@@ -86,8 +84,7 @@ def base(request):
     else:
         next_color()
     # respond ok to the page
-    with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
-        response.send("ok")
+    return Response(request, "ok")
 
 ############################################################################
 # start and loop

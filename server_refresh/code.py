@@ -15,10 +15,7 @@ import traceback
 import wifi
 import os
 
-from adafruit_httpserver.server import HTTPServer
-from adafruit_httpserver.response import HTTPResponse
-from adafruit_httpserver.mime_type import MIMEType
-from adafruit_httpserver.status import CommonHTTPStatus
+from adafruit_httpserver import Server, Response, MIMETypes, BAD_REQUEST_400
 
 PORT = 8000
 ROOT = "/www"
@@ -35,7 +32,7 @@ if not wifi.radio.connected:
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = HTTPServer(pool, root_path=ROOT)
+server = Server(pool, root_path=ROOT, debug=True)
 
 ############################################################################
 # Buttons
@@ -53,23 +50,15 @@ pressed_state = [False, False, False]
 # server routes and app logic
 ############################################################################
 
-ERROR400 = CommonHTTPStatus.BAD_REQUEST_400
-
-@server.route("/buttons", method="GET")
+@server.route("/buttons", methods="GET")
 def buttons_get(request):
-    try:
-        # receive a text in the body
-        body = json.dumps([
-            btn_names[i]
-            for i in range(len(btn_names))
-            if pressed_state[i] is True
-        ])
-        with HTTPResponse(request) as response:
-            response.send(body)
-    except Exception as err:
-        traceback.print_exception(err)
-        with HTTPResponse(request, status=ERROR400) as response:
-            response.send("error")
+    # receive a text in the body
+    body = json.dumps([
+        btn_names[i]
+        for i in range(len(btn_names))
+        if pressed_state[i] is True
+    ])
+    return Response(request, body)
 
 ############################################################################
 # start and loop

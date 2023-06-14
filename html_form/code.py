@@ -12,10 +12,7 @@ import wifi
 import os
 import re
 
-from adafruit_httpserver.server import HTTPServer
-from adafruit_httpserver.response import HTTPResponse
-from adafruit_httpserver.mime_type import MIMEType
-from adafruit_httpserver.status import CommonHTTPStatus
+from adafruit_httpserver import Server, Response, FileResponse
 
 PORT = 8000
 ROOT = "/www"
@@ -32,7 +29,7 @@ if not wifi.radio.connected:
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = HTTPServer(pool, root_path=ROOT)
+server = Server(pool, root_path=ROOT, debug=True)
 
 ############################################################################
 # form helper
@@ -80,41 +77,30 @@ def get_form_data(request):
 # server routes and app logic
 ############################################################################
 
-ERROR400 = CommonHTTPStatus.BAD_REQUEST_400
-
-@server.route("/", method="POST")
+@server.route("/", methods="POST")
 def index_form_handler(request):
     """Receive data in the body of a POST request."""
-    try:
-        # get the data from the form
-        form = get_form_data(request)
+    # get the data from the form
+    form = get_form_data(request)
 
-        # debug print
-        if form is None:
-            raise ValueError("Bad Input")
-        print(repr(form))
+    # debug print
+    if form is None:
+        raise ValueError("Bad Input")
+    print(repr(form))
 
-        ##################################################################
-        # Your application code
-        # this is where you decide what to do with the form data
+    ##################################################################
+    # Your application code
+    # this is where you decide what to do with the form data
 
-        # example: print the message field to the console
-        if "message" in form:
-            the_text = form["message"]
-            print("Message was:", the_text)
+    # example: print the message field to the console
+    if "message" in form:
+        the_text = form["message"]
+        print("Message was:", the_text)
 
-        ##################################################################
+    ##################################################################
 
-        # then, send the form again
-        with HTTPResponse(request, content_type=MIMEType.TYPE_HTML) as response:
-            response.send_file(f"{ROOT}/index.html")
-
-    except (ValueError, AttributeError) as err:
-        fm = traceback.format_exception(err, err, err.__traceback__)
-        fm = "".join("> "+x.replace("\n", "\n> ") for x in fm)
-        print(fm)
-        with HTTPResponse(request, status=ERROR400) as response:
-            response.send("error")
+    # then, send the form again
+    return FileResponse(request, "/index.html")
 
 ############################################################################
 # start and loop
