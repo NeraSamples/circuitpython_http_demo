@@ -8,10 +8,7 @@ import time
 import wifi
 import os
 
-from adafruit_httpserver.server import Server
-from adafruit_httpserver.response import Response
-from adafruit_httpserver.mime_types import MIMETypes
-from adafruit_httpserver.status import BAD_REQUEST_400
+from adafruit_httpserver import Server, Response, MIMETypes
 
 PORT = 8000
 ROOT = "/www"
