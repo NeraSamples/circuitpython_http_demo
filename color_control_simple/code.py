@@ -7,9 +7,9 @@ import socketpool
 import wifi
 import os
 
-from adafruit_httpserver.server import HTTPServer
-from adafruit_httpserver.response import HTTPResponse
-from adafruit_httpserver.status import CommonHTTPStatus
+from adafruit_httpserver.server import Server
+from adafruit_httpserver.response import Response
+from adafruit_httpserver.status import BAD_REQUEST_400
 
 PORT = 8000
 ROOT = "/www"
@@ -27,7 +27,7 @@ if not wifi.radio.connected:
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
 
 pool = socketpool.SocketPool(wifi.radio)
-server = HTTPServer(pool, root_path=ROOT)
+server = Server(pool, root_path=ROOT)
 
 ############################################################################
 # some output for demo (neopixel)
@@ -51,10 +51,8 @@ pixels.fill(0)
 # server routes and app logic
 ############################################################################
 
-ERROR400 = CommonHTTPStatus.BAD_REQUEST_400
-
 # set the current color from the web page
-@server.route("/receive", method="POST")
+@server.route("/receive", methods="POST")
 def base(request):
     try:
         # receive values in the body
@@ -70,12 +68,12 @@ def base(request):
                 print("Color invalid")
         ########################################################
         # respond ok
-        with HTTPResponse(request) as response:
+        with Response(request) as response:
             response.send("ok")
     except (ValueError, AttributeError) as err:
         # show the error if something went wrong
         traceback.print_exception(err)
-        with HTTPResponse(request, status=ERROR400) as response:
+        with Response(request, status=BAD_REQUEST_400) as response:
             response.send("error")
 
 ############################################################################
