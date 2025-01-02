@@ -46,7 +46,7 @@ Some optional features can be removed to adapt the code to other uses:
 
 Press once to add a button to the list, press again to remove. The html retrieves the buttons state every 5 seconds.
 
-This example is written for the Adafruit Fun House, but you can change the button pins to what you need.
+This example is written for the Adafruit Fun House, but you can change the button pins to what you need. Make sure to have the correct number of button names in the `BUTTON_NAMES` variable.
 
 ## Color Pickers For LEDs
 
