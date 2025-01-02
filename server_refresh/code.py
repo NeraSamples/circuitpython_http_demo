@@ -19,6 +19,10 @@ from adafruit_httpserver import Server, Response, MIMETypes, BAD_REQUEST_400
 
 PORT = 8000
 ROOT = "/www"
+# this is an example for the FunHouse
+BUTTON_PINS = (board.BUTTON_UP, board.BUTTON_SELECT, board.BUTTON_DOWN)
+# NOTE: make sure that the number of button names is the same as the buttons
+BUTTON_NAMES = ["BUP", "BSEL", "BDOWN"]
 
 ############################################################################
 # wifi
@@ -40,11 +44,10 @@ server = Server(pool, root_path=ROOT, debug=True)
 
 import keypad
 buttons = keypad.Keys(
-    (board.BUTTON_UP, board.BUTTON_SELECT, board.BUTTON_DOWN),
+    BUTTON_PINS,
     value_when_pressed=True,
 )
-btn_names = ["BUP", "BSEL", "BDOWN"]
-pressed_state = [False, False, False]
+pressed_state = [False] * len(BUTTON_NAMES)
 
 ############################################################################
 # server routes and app logic
@@ -54,8 +57,8 @@ pressed_state = [False, False, False]
 def buttons_get(request):
     # receive a text in the body
     body = json.dumps([
-        btn_names[i]
-        for i in range(len(btn_names))
+        BUTTON_NAMES[i]
+        for i in range(len(BUTTON_NAMES))
         if pressed_state[i] is True
     ])
     return Response(request, body)

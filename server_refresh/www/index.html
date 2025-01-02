@@ -10,25 +10,37 @@ SPDX-License-Identifier: MIT
 	<link rel="icon" href="data:;base64,=">
 	<title>Button</title>
 	<script>
+	var countdown_number = 6
 	async function update() {
+		const countdown = document.getElementById("countdown")
 		const buttons_list = document.getElementById("buttons_list")
-		const response = await fetch("/buttons")
-		if(response.ok) {
-			console.log(response)
-			var content = await response.json()
-			console.log(content)
-			if(content.length > 0) {
-				buttons_list.innerHTML = content.join(", ")
-			} else {
-				buttons_list.innerHTML = "No button"
+		countdown_number = countdown_number - 1
+		if(countdown_number > 0) {
+			countdown.innerHTML = countdown_number.toString()
+		} else {
+			countdown_number = 6
+			countdown.innerHTML = "0"
+			buttons_list.style.color = "grey"
+			const response = await fetch("/buttons")
+			if(response.ok) {
+				console.log(response)
+				var content = await response.json()
+				console.log(content)
+				if(content.length > 0) {
+					buttons_list.innerHTML = content.join(", ")
+				} else {
+					buttons_list.innerHTML = "No button"
+				}
 			}
+			buttons_list.style.color = "black"
 		}
 	}
-	setInterval(update, 5000)
+	setInterval(update, 1000)
 	</script>
 </head>
 <body>
-	<p>Buttons that were pressed:</p>
+	<p>Status of the board's buttons.</p>
+	<p>Press once to add a button to the list, press again to remove. Refresh in <span id="countdown">5</span>s.</p>
 	<p id="buttons_list">No button</p>
 </body>
 </html>
