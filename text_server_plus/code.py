@@ -57,7 +57,7 @@ text_area = Label(
 )
 
 splash.append(text_area)
-display.show(splash)
+display.root_group = splash
 display.refresh()
 
 def wrap_the_text(text):
@@ -71,9 +71,12 @@ def wrap_the_text(text):
 if not wifi.radio.connected:
     wifi.radio.connect(
         os.getenv("WIFI_SSID"),
-        os.getenv("WIFI_PASSWORD")
+        os.getenv("WIFI_PASSWORD"),
     )
 print(f"Listening on http://{wifi.radio.ipv4_address}:{PORT}")
+
+text_area.text += f"\n{wifi.radio.ipv4_address}:{PORT}"
+display.refresh()
 
 pool = socketpool.SocketPool(wifi.radio)
 server = Server(pool, root_path=ROOT, debug=True)
@@ -101,11 +104,12 @@ def base(request):
     ########################################################
     # extract the text field
     the_text = body.get("text", "")
-    # prepare the message for the screen
-    message = "\n".join(wrap_the_text(the_text))
-    # show the message
-    text_area.text = message
-    print(f"Received:", message)
+    if the_text != "":
+        # prepare the message for the screen
+        message = "\n".join(wrap_the_text(the_text))
+        # show the message
+        text_area.text = message
+        print(f"Received:", message)
 
     ########################################################
     # refresh the display after all the changes
