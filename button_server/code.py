@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 """Press a button on the web page to cycle the colors"""
 import board
-import mdns
-import microcontroller
 import socketpool
 import time
 import wifi
